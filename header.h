@@ -12,6 +12,9 @@ struct intMatrix {
   // float or int
   int rows;
   int columns;
+  int non_zeros;
+  int* matrix_vals;
+  int** matrix;
   // non-zero values stored in row-major order
   int* nnz;
   // ia[n] = ia[n - 2] + num non-zero elements in the previous row
@@ -22,10 +25,11 @@ struct intMatrix {
 };
 
 struct floatMatrix {
-  bool integer;
-
   int rows;
   int columns;
+  int non_zeros;
+  double* matrix_vals;
+  double** matrix;
   // non-zero values stored in row-major order
   double* nnz;
   // ia[n] = ia[n - 2] + num non-zero elements in the previous row

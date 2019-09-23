@@ -1,12 +1,20 @@
 #include "header.h"
 
-int* buildIntNNZ (int len, int *values) {
+int* buildIntNNZ (int len, int dimensions, int *values) {
   int *nnz = malloc(sizeof(int) * len);
-  for (int i = 0; i < len; i++) {
+
+  int nnz_idx = 0;
+  for (int i = 0; i < dimensions; i++) {
+    // printf("%d\n", values[i]);
     if (values[i] != 0) {
-      nnz[i] = values[i];
+      nnz[nnz_idx] = values[i];
+      nnz_idx++;
+    }
+    else {
+      continue;
     }
   }
+
   return nnz;
 }
 
@@ -18,7 +26,7 @@ int* buildIntIA (int rows, int columns, int num_values, int *values) {
   int row_count = 1;
   for (int i = 0; i < num_values; i++) {
     if (values[i] != 0) {
-      printf("%d\n", values[i]);
+      // printf("%d\n", values[i]);
       pos_count++;
     }
     cell_count++;
@@ -29,11 +37,29 @@ int* buildIntIA (int rows, int columns, int num_values, int *values) {
       row_count++;
     }
   }
+
   return ia;
 }
 
-int* buildIntJA (int len, int *values) {
+int* buildIntJA (int columns, int rows, int nnz_len, int *values) {
+  printf("%d\n", nnz_len);
+  int *ja = malloc(nnz_len * sizeof(int));
+  int column_count = 0;
 
+  for (int i = 0; i < nnz_len; i++) {
+    if (values[i] != 0) {
+      ja[i] = column_count;
+      column_count++;
+    }
+
+    if (column_count == (columns - 1)) {
+      column_count = 0;
+    }
+
+    column_count++;
+  }
+
+  return ja;
 }
 
 
@@ -46,10 +72,10 @@ struct intMatrix convertToCSR(char *filename) {
 
   else {
     char *line = NULL;
-    int line_count = 0;
+    int line_count = 0, non_zeroes = 0;
     size_t line_len = 0;
-    int rows, columns, nnz_len;
-    int *nnz, *ia, *ja;
+    int rows = 0, columns = 0, nnz_len = 0;
+    int *nnz, *ia, *ja, *vals;
     struct intMatrix matrix;
 
     while((getline(&line, &line_len, fp)) != -1) {
@@ -62,7 +88,7 @@ struct intMatrix convertToCSR(char *filename) {
       }
       else if (line_count > 3) {
         char *value = strtok(line, " ");
-        int j = 0;
+        int j = 0, dimensions = columns * rows;
         int *matrix_vals = malloc(sizeof(int) * rows * columns);
         
         while (value != NULL) {
@@ -73,20 +99,28 @@ struct intMatrix convertToCSR(char *filename) {
           j++;
           value = strtok(NULL, " ");
         }
-        nnz = buildIntNNZ(nnz_len, matrix_vals);
-        ia = buildIntIA(rows, columns, (rows*columns), matrix_vals);
-        free(matrix_vals);
-        free(value);
+        nnz = buildIntNNZ(nnz_len, dimensions, matrix_vals);
+        ia = buildIntIA(rows, columns, dimensions, matrix_vals);
+        ja = buildIntJA(rows, columns, nnz_len, matrix_vals);
+        vals = matrix_vals;
+        non_zeroes = nnz_len;
       }
     }
 
     matrix.columns = columns;
     matrix.rows = rows;
     matrix.nnz = nnz;
+    matrix.ia = ia;
+    matrix.ja = ja;
+    matrix.matrix_vals = vals;
+    matrix.non_zeros = non_zeroes;
 
-    free(line);
-
+    fclose(fp);
 
     return matrix;
   }
+}
+
+void printSingleIntResults(struct intMatrix m, char* op_type, int thread_num) {
+  FILE *file = fopen("matrix.out", "w");
 }
