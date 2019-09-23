@@ -7,6 +7,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <omp.h>
+#include <getopt.h>
 
 // matrix in CSR format
 struct Matrix {
@@ -27,7 +28,7 @@ struct Matrix {
 
 struct Matrix convertToCSR(char *filename);
 struct Matrix scalarMultiply (struct Matrix m, double scalar, int thread_num);
-void printSingleResult (struct Matrix m, char* op_type, char* op_name, int thread_num, clock_t time_taken);
+void printSingleResult (struct Matrix m, char* op_type, char* op_name, int thread_num, double time_taken);
 struct Matrix transpose (struct Matrix m, int num_threads);
 struct Matrix matrixAddition (struct Matrix a, struct Matrix b, int num_threads);
 struct Matrix trace (struct Matrix m, int num_threads);

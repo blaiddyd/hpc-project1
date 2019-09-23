@@ -13,7 +13,7 @@ matrix_ops: matrix_ops.c header.h
 	gcc -c -fopenmp matrix_ops.c
 
 clean:
-	rm -f *.o
+	rm -f *.o *.out test
 
 clear:
 	rm -f *.o

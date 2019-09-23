@@ -48,7 +48,7 @@ struct Matrix scalarMultiply (struct Matrix m, double scalar, int thread_num) {
   double time_taken = (double) elapsed / CLOCKS_PER_SEC;
 
   // printf("%f\n", time_taken);
-  // printSingleResult(new_matrix, cmd, "sm", thread_num, time_taken);
+  printSingleResult(new_matrix, cmd, "sm", thread_num, time_taken);
 
   return new_matrix;
 }

@@ -86,10 +86,10 @@ struct Matrix convertToCSR(char *filename) {
     while((getline(&line, &line_len, fp)) != -1) {
       line_count++;
       if (line_count == 1) {
-        if (strcmp("int", line) == 0) {
+        if (strstr("int", line) == 0) {
           matrix.is_float = false;
         }
-        else if (strcmp("float", line) == 0) {
+        else if (strstr("float", line) == 0) {
           matrix.is_float = true;
         }
       }
@@ -135,21 +135,91 @@ struct Matrix convertToCSR(char *filename) {
   }
 }
 
+char* getResultsString(double *results, int dimensions, bool is_float) {
 
-void printSingleResult (struct Matrix m, char* op_type, char* op_name, int thread_num, clock_t time_taken) {
+  char *res = malloc(10000 * sizeof(char));
+
+  for (int i = 0; i < dimensions; i++) {
+    char num_char[20];
+    num_char[0] = '\0';
+    if (!is_float) {
+      // printf("Dealing with integers!\n");
+      sprintf(num_char, "%d ", (int) results[i]);
+      strcat(res, num_char);
+      num_char[0] = '\0';
+    }
+
+    else {
+      sprintf(num_char, "%f ", results[i]);
+      strcat(res, num_char);
+      num_char[0] = '\0';
+    }
+  }
+
+  return res;
+
+  free(res);
+}
+
+
+void printSingleResult (struct Matrix m, char* op_type, char* op_name, int thread_num, double time_taken) {
   time_t t = time(NULL);
   struct tm now = *localtime(&t);
   
   char *date = malloc(sizeof(char) * 200);
   char *filename = malloc(sizeof(char) * 500);
+  int dimensions = m.columns * m.rows;
 
   sprintf(date, "%d%d%d_%d%d", now.tm_mday, now.tm_mon + 1, now.tm_year + 1900, now.tm_hour, now.tm_min);
 
   sprintf(filename, "22412569_%s_%s.out", date, op_name);
 
-  printf("%s\n", filename);
+  FILE *outfile = fopen(filename, "w");
+
+  char* results = getResultsString(m.matrix_vals, dimensions, m.is_float);
+
+  if (m.is_float == 0) {
+    fprintf(outfile, "%s\n%s\n%d\n%s\n%d\n%d\n%s", op_type, m.filename, thread_num, "int", m.rows, m.columns, results);
+  }
+
+  else {
+    fprintf(outfile, "%s\n%s\n%d\n%s\n%d\n%d\n%s", op_type, m.filename, thread_num, "float", m.rows, m.columns, results);
+  }
+
+  fclose(outfile);
   
+  free(results);
   free(date);
   free(filename);
+}
 
+void printDoubleResult (struct Matrix a, struct Matrix b, struct Matrix result, char* op_type, char* op_name, int thread_num, double seconds) {
+  time_t t = time(NULL);
+  struct tm now = *localtime(&t);
+  
+  char *date = malloc(sizeof(char) * 200);
+  char *filename = malloc(sizeof(char) * 500);
+  int dimensions = result.columns * result.rows;
+
+  sprintf(date, "%d%d%d_%d%d", now.tm_mday, now.tm_mon + 1, now.tm_year + 1900, now.tm_hour, now.tm_min);
+
+  sprintf(filename, "22412569_%s_%s.out", date, op_name);
+
+  FILE *outfile = fopen(filename, "w");
+
+  char *results = getResultsString(result.matrix_vals, dimensions, result.is_float);
+
+  if (result.is_float == 0) {
+    fprintf(outfile, "%s\n%s\n%s\n%d\n%s\n%d\n%d\n%s", op_type, a.filename, b.filename, thread_num, "int", result.rows, result.columns, results);
+  }
+
+  else {
+    fprintf(outfile, "%s\n%s\n%s\n%d\n%s\n%d\n%d\n%s", op_type, a.filename, b.filename, thread_num, "float", result.rows, result.columns, results);
+  }
+
+  fclose(outfile);
+  
+  free(results);
+  free(date);
+  free(filename);
 }
