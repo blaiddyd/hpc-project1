@@ -1,7 +1,7 @@
 #include "header.h"
 
-int* buildIntNNZ (int len, int dimensions, int *values) {
-  int *nnz = malloc(sizeof(int) * len);
+double* buildIntNNZ (int len, int dimensions, double *values) {
+  double *nnz = malloc(sizeof(double) * len);
 
   int nnz_idx = 0;
   for (int i = 0; i < dimensions; i++) {
@@ -18,7 +18,7 @@ int* buildIntNNZ (int len, int dimensions, int *values) {
   return nnz;
 }
 
-int* buildIntIA (int rows, int columns, int num_values, int *values) {
+int* buildIntIA (int rows, int columns, int num_values, double *values) {
   int *ia = malloc(sizeof(int) * (rows + 1));
   ia[0] = 0;
   int pos_count = 0;
@@ -41,29 +41,32 @@ int* buildIntIA (int rows, int columns, int num_values, int *values) {
   return ia;
 }
 
-int* buildIntJA (int columns, int rows, int nnz_len, int *values) {
-  printf("%d\n", nnz_len);
+int* buildIntJA (int columns, int rows, int nnz_len, double *values) {
   int *ja = malloc(nnz_len * sizeof(int));
   int column_count = 0;
 
-  for (int i = 0; i < nnz_len; i++) {
-    if (values[i] != 0) {
-      ja[i] = column_count;
+  #pragma omp parallel
+  {
+    #pragma omp for
+    for (int i = 0; i < nnz_len; i++) {
+      if (values[i] != 0) {
+        ja[i] = column_count;
+        column_count++;
+      }
+
+      if (column_count == (columns - 1)) {
+        column_count = 0;
+      }
+
       column_count++;
     }
-
-    if (column_count == (columns - 1)) {
-      column_count = 0;
-    }
-
-    column_count++;
   }
 
   return ja;
 }
 
 
-struct intMatrix convertToCSR(char *filename) {
+struct Matrix convertToCSR(char *filename) {
   FILE *fp = fopen(filename, "r");
   if (fp == NULL) {
     printf("Could not open the file provided.\n");
@@ -75,12 +78,22 @@ struct intMatrix convertToCSR(char *filename) {
     int line_count = 0, non_zeroes = 0;
     size_t line_len = 0;
     int rows = 0, columns = 0, nnz_len = 0;
-    int *nnz, *ia, *ja, *vals;
-    struct intMatrix matrix;
+    double *nnz;
+    int *ia, *ja;
+    double *vals;
+    struct Matrix matrix;
 
     while((getline(&line, &line_len, fp)) != -1) {
       line_count++;
-      if (line_count == 2) {
+      if (line_count == 1) {
+        if (strcmp("int", line) == 0) {
+          matrix.is_float = false;
+        }
+        else if (strcmp("float", line) == 0) {
+          matrix.is_float = true;
+        }
+      }
+      else if (line_count == 2) {
         rows = atoi(line);
       }
       else if (line_count == 3) {
@@ -89,13 +102,13 @@ struct intMatrix convertToCSR(char *filename) {
       else if (line_count > 3) {
         char *value = strtok(line, " ");
         int j = 0, dimensions = columns * rows;
-        int *matrix_vals = malloc(sizeof(int) * rows * columns);
+        double *matrix_vals = malloc(sizeof(double) * rows * columns);
         
         while (value != NULL) {
-          if ((int) strtol(value, NULL, 10) != 0) {
+          if ((double) strtol(value, NULL, 10) != 0) {
             nnz_len++;
           }
-          matrix_vals[j] = (int) strtol(value, NULL, 10);
+          matrix_vals[j] = (double) strtol(value, NULL, 10);
           j++;
           value = strtok(NULL, " ");
         }
@@ -114,6 +127,7 @@ struct intMatrix convertToCSR(char *filename) {
     matrix.ja = ja;
     matrix.matrix_vals = vals;
     matrix.non_zeros = non_zeroes;
+    matrix.filename = filename;
 
     fclose(fp);
 
@@ -121,6 +135,21 @@ struct intMatrix convertToCSR(char *filename) {
   }
 }
 
-void printSingleIntResults(struct intMatrix m, char* op_type, int thread_num) {
-  FILE *file = fopen("matrix.out", "w");
+
+void printSingleResult (struct Matrix m, char* op_type, char* op_name, int thread_num, clock_t time_taken) {
+  time_t t = time(NULL);
+  struct tm now = *localtime(&t);
+  
+  char *date = malloc(sizeof(char) * 200);
+  char *filename = malloc(sizeof(char) * 500);
+
+  sprintf(date, "%d%d%d_%d%d", now.tm_mday, now.tm_mon + 1, now.tm_year + 1900, now.tm_hour, now.tm_min);
+
+  sprintf(filename, "22412569_%s_%s.out", date, op_name);
+
+  printf("%s\n", filename);
+  
+  free(date);
+  free(filename);
+
 }

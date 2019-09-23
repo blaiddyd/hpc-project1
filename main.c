@@ -2,8 +2,12 @@
 
 int main(int argc, char* argv[]) {
     
-    struct intMatrix m = convertToCSR("example.in");
-    intScalarMultiply(m, 1.7, 4);
+  struct Matrix m = convertToCSR("example.in");
+  trace(m, 4);
+  struct Matrix x = scalarMultiply(m, 1.7, 4);
+  transpose(x, 4);
+  matrixMultiply(m, x, 4);
 
-    return EXIT_SUCCESS;
+  
+  return EXIT_SUCCESS;
 }
