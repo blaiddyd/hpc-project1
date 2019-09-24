@@ -2,7 +2,6 @@
 
 double* buildIntNNZ (int len, int dimensions, double *values) {
   double *nnz = malloc(sizeof(double) * len);
-
   int nnz_idx = 0;
   for (int i = 0; i < dimensions; i++) {
     // printf("%d\n", values[i]);
@@ -16,10 +15,13 @@ double* buildIntNNZ (int len, int dimensions, double *values) {
   }
 
   return nnz;
+
+  free(nnz);
 }
 
 int* buildIntIA (int rows, int columns, int num_values, double *values) {
-  int *ia = malloc(sizeof(int) * (rows + 1));
+  int ia_len = rows + 1;
+  int* ia = malloc(sizeof(int) * ia_len);
   ia[0] = 0;
   int pos_count = 0;
   int cell_count = 1;
@@ -39,6 +41,8 @@ int* buildIntIA (int rows, int columns, int num_values, double *values) {
   }
 
   return ia;
+
+  free(ia);
 }
 
 int* buildIntJA (int columns, int rows, int nnz_len, double *values) {
@@ -86,10 +90,11 @@ struct Matrix convertToCSR(char *filename) {
     while((getline(&line, &line_len, fp)) != -1) {
       line_count++;
       if (line_count == 1) {
-        if (strstr("int", line) == 0) {
+        if (strstr(line, "int")) {
+          printf("Is int\n");
           matrix.is_float = false;
         }
-        else if (strstr("float", line) == 0) {
+        else if (strstr(line, "float")) {
           matrix.is_float = true;
         }
       }
@@ -129,9 +134,16 @@ struct Matrix convertToCSR(char *filename) {
     matrix.non_zeros = non_zeroes;
     matrix.filename = filename;
 
+    printf("%d\n", matrix.is_float);
+
     fclose(fp);
 
     return matrix;
+
+    free(nnz);
+    free(ja);
+    free(ia);
+    free(vals);
   }
 }
 
@@ -142,14 +154,16 @@ char* getResultsString(double *results, int dimensions, bool is_float) {
   for (int i = 0; i < dimensions; i++) {
     char num_char[20];
     num_char[0] = '\0';
-    if (!is_float) {
-      // printf("Dealing with integers!\n");
+    if (is_float == 0) {
+      printf("%f\n", results[i]);
       sprintf(num_char, "%d ", (int) results[i]);
       strcat(res, num_char);
       num_char[0] = '\0';
+      
     }
 
     else {
+      printf("Its a float\n");
       sprintf(num_char, "%f ", results[i]);
       strcat(res, num_char);
       num_char[0] = '\0';
@@ -165,6 +179,8 @@ char* getResultsString(double *results, int dimensions, bool is_float) {
 void printSingleResult (struct Matrix m, char* op_type, char* op_name, int thread_num, double time_taken) {
   time_t t = time(NULL);
   struct tm now = *localtime(&t);
+
+  printf("Is floatz: %d\n", m.is_float);
   
   char *date = malloc(sizeof(char) * 200);
   char *filename = malloc(sizeof(char) * 500);
@@ -179,11 +195,11 @@ void printSingleResult (struct Matrix m, char* op_type, char* op_name, int threa
   char* results = getResultsString(m.matrix_vals, dimensions, m.is_float);
 
   if (m.is_float == 0) {
-    fprintf(outfile, "%s\n%s\n%d\n%s\n%d\n%d\n%s", op_type, m.filename, thread_num, "int", m.rows, m.columns, results);
+    fprintf(outfile, "%s\n%s\n%d\n%s\n%d\n%d\n%s\n%f", op_type, m.filename, thread_num, "int", m.rows, m.columns, results, time_taken);
   }
 
   else {
-    fprintf(outfile, "%s\n%s\n%d\n%s\n%d\n%d\n%s", op_type, m.filename, thread_num, "float", m.rows, m.columns, results);
+    fprintf(outfile, "%s\n%s\n%d\n%s\n%d\n%d\n%s\n%f", op_type, m.filename, thread_num, "float", m.rows, m.columns, results, time_taken);
   }
 
   fclose(outfile);
@@ -205,16 +221,16 @@ void printDoubleResult (struct Matrix a, struct Matrix b, struct Matrix result, 
 
   sprintf(filename, "22412569_%s_%s.out", date, op_name);
 
-  FILE *outfile = fopen(filename, "w");
+  FILE *outfile = fopen(filename, "a");
 
   char *results = getResultsString(result.matrix_vals, dimensions, result.is_float);
 
   if (result.is_float == 0) {
-    fprintf(outfile, "%s\n%s\n%s\n%d\n%s\n%d\n%d\n%s", op_type, a.filename, b.filename, thread_num, "int", result.rows, result.columns, results);
+    fprintf(outfile, "%s\n%s\n%s\n%d\n%s\n%d\n%d\n%s\n%f", op_type, a.filename, b.filename, thread_num, "int", result.rows, result.columns, results, seconds);
   }
 
   else {
-    fprintf(outfile, "%s\n%s\n%s\n%d\n%s\n%d\n%d\n%s", op_type, a.filename, b.filename, thread_num, "float", result.rows, result.columns, results);
+    fprintf(outfile, "%s\n%s\n%s\n%d\n%s\n%d\n%d\n%s\n%f", op_type, a.filename, b.filename, thread_num, "float", result.rows, result.columns, results, seconds);
   }
 
   fclose(outfile);

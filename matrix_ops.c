@@ -20,6 +20,7 @@ struct Matrix scalarMultiply (struct Matrix m, double scalar, int thread_num) {
   new_matrix.columns = m.columns;
   new_matrix.filename = m.filename;
   new_matrix.non_zeros = m.non_zeros;
+  new_matrix.is_float = m.is_float;
 
   int dimensions = m.rows * m.columns;
 
@@ -73,13 +74,54 @@ struct Matrix trace (struct Matrix m, int num_threads) {
 
     clock_t end = clock();
     clock_t elapsed = end - start;
-    double time_taken = (double) elapsed / CLOCKS_PER_SEC; 
-    // printf("Time taken: %f\n", time_taken); 
+    double time_taken = (double) elapsed / CLOCKS_PER_SEC;
   }
 }
 
 struct Matrix matrixAddition (struct Matrix a, struct Matrix b, int num_threads) {
-  
+  if ((a.rows * a.columns) != (b.rows * b.columns)) {
+    printf("Matrices must have the same dimensions in order to perfrom matrix addition.\n");
+    exit(EXIT_FAILURE);
+  }
+
+  else {
+    omp_set_dynamic(0);
+    omp_set_num_threads(num_threads);
+
+    clock_t start = clock();
+
+    int dimensions = a.rows * b.rows;
+    double* added_matrix = malloc(sizeof(double) * dimensions);
+    struct Matrix result;
+
+    result.columns = a.columns;
+    result.rows = a.rows;
+
+    int idx = 0;
+
+    #pragma omp parallel for private(i,j) shared(added_matrix, a, b) reduction(+:idx)
+    for (int i = 0; i < a.columns; i++) {
+      for (int j = 0; j < a.rows; j++) {
+        added_matrix[idx] = a.matrix_vals[j + a.rows * i] + b.matrix_vals[j + b.rows * i];
+        idx++;
+      }
+    }
+
+    result.matrix_vals = added_matrix;
+
+    if (a.is_float == 0) {
+      result.is_float = 0;
+    }
+    else {
+      result.is_float = 1;
+    }
+
+    clock_t end = clock();
+    clock_t elapsed = end - start;
+    double time_taken = (double) elapsed / CLOCKS_PER_SEC;
+
+    printDoubleResult(a, b, result, "ma", "ma", num_threads, time_taken);
+  }
 }
 
 
@@ -103,10 +145,9 @@ struct Matrix transpose (struct Matrix m, int num_threads) {
   int counter = 0;
 
   #pragma omp parallel for private(i,j) shared(transposed.rows, transposed.columns) reductions(+:counter)
-  for (int i = 0; i < transposed.rows; i++) {
-    for (int j = 0; j < transposed.columns; j++) {
-    //  printf("%d\n", m.matrix_vals[i + j * transposed.rows]);
-      new_matrix[counter++] = m.matrix_vals[j * transposed.columns + i];
+  for (int i = 0; i < transposed.columns; i++) {
+    for (int j = 0; j < transposed.rows; j++) {
+      new_matrix[counter++] = m.matrix_vals[i + transposed.columns * j];
     }
     
   }
@@ -117,8 +158,7 @@ struct Matrix transpose (struct Matrix m, int num_threads) {
   clock_t elapsed = end - start;
   double time_taken = (double) elapsed / CLOCKS_PER_SEC;
 
-  // printf("%f\n", time_taken);
-  printf("works? %f\n", new_matrix[1]);
+  printSingleResult(m, "tr", "tr", num_threads, time_taken);
 }
 
 struct Matrix matrixMultiply (struct Matrix a, struct Matrix b, int num_threads) {
@@ -129,26 +169,36 @@ struct Matrix matrixMultiply (struct Matrix a, struct Matrix b, int num_threads)
 
   clock_t start = clock();
 
+  int new_dimensions = a.rows * b.columns;
+  double *mult_vals = malloc(sizeof(double) * new_dimensions);
+
   #pragma omp parallel for private(i,j,x) shared(a, b, a.rows, a.columns, b.rows, b.columns, new_matrix.matrix_vals)
   for (int i = 0; i < a.rows; i++) {
     for (int j = 0; j < b.columns; j++) {
       double total = 0.0;
       for (int x = 0; x < b.rows; x++) {
-        // printf("A value: %f\n", a.matrix_vals[i + x * a.columns]);
-        // printf("B value: %f\n", b.matrix_vals[i + x * b.columns]);
         total = total + a.matrix_vals[i + x * a.columns] * b.matrix_vals[j + x * b.columns];
       }
-      new_matrix.matrix_vals[i + j * b.columns] = total;
+      mult_vals[i + j * b.columns] = total;
     }
-  }
-
-  for (int i = 0; i < (a.rows * b.columns); i++) {
-    printf("%f\n", new_matrix.matrix_vals[i]);
   }
 
   clock_t end = clock();
   clock_t elapsed = end - start;
   double time_taken = (double) elapsed / CLOCKS_PER_SEC; 
-  printf("Time taken: %f\n", time_taken); 
+
+  new_matrix.columns = a.rows;
+  new_matrix.rows = b.columns;
+  new_matrix.matrix_vals = mult_vals;
+
+  if (a.is_float == 0) {
+    new_matrix.is_float = 0;
+  }
+
+  else {
+    new_matrix.is_float = 1;
+  }
+
+  printDoubleResult(a, b, new_matrix, "mm", "mm", num_threads, time_taken);
 
 }
