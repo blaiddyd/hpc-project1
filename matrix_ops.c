@@ -61,6 +61,9 @@ struct Matrix trace (struct Matrix m, int num_threads) {
   }
 
   else {
+    omp_set_dynamic(0);
+    omp_set_num_threads(num_threads);
+
     clock_t start = clock();
 
     double trace_sum = 0.0;
@@ -70,11 +73,13 @@ struct Matrix trace (struct Matrix m, int num_threads) {
       trace_sum += m.matrix_vals[i * m.columns + i];
     }
 
-    
-
     clock_t end = clock();
     clock_t elapsed = end - start;
     double time_taken = (double) elapsed / CLOCKS_PER_SEC;
+
+    printTraceResult(m, trace_sum, "tr", num_threads, time_taken);
+
+    return m;
   }
 }
 
@@ -121,6 +126,8 @@ struct Matrix matrixAddition (struct Matrix a, struct Matrix b, int num_threads)
     double time_taken = (double) elapsed / CLOCKS_PER_SEC;
 
     printDoubleResult(a, b, result, "ma", "ma", num_threads, time_taken);
+
+    return result;
   }
 }
 
@@ -159,6 +166,8 @@ struct Matrix transpose (struct Matrix m, int num_threads) {
   double time_taken = (double) elapsed / CLOCKS_PER_SEC;
 
   printSingleResult(transposed, "tr", "tr", num_threads, time_taken);
+
+  return transposed;
 }
 
 struct Matrix matrixMultiply (struct Matrix a, struct Matrix b, int num_threads) {
@@ -201,4 +210,5 @@ struct Matrix matrixMultiply (struct Matrix a, struct Matrix b, int num_threads)
 
   printDoubleResult(a, b, new_matrix, "mm", "mm", num_threads, time_taken);
 
+  return new_matrix;
 }

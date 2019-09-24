@@ -34,3 +34,4 @@ struct Matrix matrixAddition (struct Matrix a, struct Matrix b, int num_threads)
 struct Matrix trace (struct Matrix m, int num_threads);
 struct Matrix matrixMultiply (struct Matrix a, struct Matrix b, int num_threads);
 void printDoubleResult (struct Matrix a, struct Matrix b, struct Matrix result, char* op_type, char* op_name, int thread_num, double seconds);
+void printTraceResult(struct Matrix m, double result, char* op_type, int num_threads, double time_taken);

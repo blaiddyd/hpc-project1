@@ -119,7 +119,7 @@ struct Matrix convertToCSR(char *filename) {
           value = strtok(NULL, " ");
         }
         nnz = buildIntNNZ(nnz_len, dimensions, matrix_vals);
-        // ia = buildIntIA(rows, columns, dimensions, matrix_vals);
+        ia = buildIntIA(rows, columns, dimensions, matrix_vals);
         ja = buildIntJA(rows, columns, nnz_len, matrix_vals);
         vals = matrix_vals;
         non_zeroes = nnz_len;
@@ -234,6 +234,35 @@ void printDoubleResult (struct Matrix a, struct Matrix b, struct Matrix result, 
   fclose(outfile);
   
   free(results);
+  free(date);
+  free(filename);
+}
+
+void printTraceResult(struct Matrix m, double result, char* op_type, int num_threads, double time_taken) {
+  time_t t = time(NULL);
+  struct tm now = *localtime(&t);
+  
+  char *date = malloc(sizeof(char) * 200);
+  char *filename = malloc(sizeof(char) * 500);
+  int dimensions = m.columns * m.rows;
+
+  sprintf(date, "%d%d%d_%d%d", now.tm_mday, now.tm_mon + 1, now.tm_year + 1900, now.tm_hour, now.tm_min);
+
+  sprintf(filename, "22412569_%s_%s.out", date, op_type);
+
+  FILE *outfile = fopen(filename, "a");
+
+  if (m.is_float == 0) {
+    int int_result = (int) result;
+    fprintf(outfile, "%s\n%s\n%d\n%s\n%d\n%d\n%d\n%f", op_type, m.filename, num_threads, "int", m.rows, m.columns, int_result, time_taken);
+  }
+
+  else {
+    fprintf(outfile, "%s\n%s\n%d\n%s\n%d\n%d\n%f\n%f", op_type, m.filename, num_threads, "float", m.rows, m.columns, result, time_taken);
+  }
+
+  fclose(outfile);
+
   free(date);
   free(filename);
 }
