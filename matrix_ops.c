@@ -125,7 +125,7 @@ struct Matrix matrixAddition (struct Matrix a, struct Matrix b, int num_threads)
     clock_t elapsed = end - start;
     double time_taken = (double) elapsed / CLOCKS_PER_SEC;
 
-    printDoubleResult(a, b, result, "ma", "ma", num_threads, time_taken);
+    printDoubleResult(a, b, result, "ad", "ad", num_threads, time_taken);
 
     return result;
   }

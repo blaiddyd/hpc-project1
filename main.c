@@ -16,6 +16,7 @@ int main(int argc, char* argv[]) {
       if (strstr(argv[i], "sm")) {
         op_type = 1;
         sm_factor =  (double) strtol(argv[i + 1], NULL, 10);
+        i++;
       }
       else if (strstr(argv[i], "mm")) {
         op_type = 2;
@@ -35,14 +36,13 @@ int main(int argc, char* argv[]) {
       }
     }
 
-    else if (i == 2) {
-      if (strstr(argv[i], "-f") && argv[i + 1] != NULL) {
-        strcpy(filename, argv[i + 1]);
-        if (argv[i + 2] != NULL && strstr(argv[i + 2], ".in") && (op_type == 2 || op_type == 4)) {
-          strcpy(filename_2, argv[i + 2]);
-        }
+    if (strstr(argv[i], "-f") && argv[i + 1] != NULL) {
+      strcpy(filename, argv[i + 1]);
+      if (argv[i + 2] != NULL && strstr(argv[i + 2], ".in") && (op_type == 2 || op_type == 4)) {
+        strcpy(filename_2, argv[i + 2]);
       }
     }
+    
     if (strcmp(argv[i], "-t") == 0) {
       thread_num = strtol(argv[i + 1], NULL, 10);
     }

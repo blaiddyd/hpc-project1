@@ -16,5 +16,5 @@ clean:
 	rm -f *.o *.out test
 
 clear:
-	rm -f *.o
+	rm -f *.o *.out test
 	rm matrix
