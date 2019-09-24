@@ -67,6 +67,8 @@ int* buildIntJA (int columns, int rows, int nnz_len, double *values) {
   }
 
   return ja;
+
+  free(ja);
 }
 
 
@@ -91,7 +93,6 @@ struct Matrix convertToCSR(char *filename) {
       line_count++;
       if (line_count == 1) {
         if (strstr(line, "int")) {
-          printf("Is int\n");
           matrix.is_float = false;
         }
         else if (strstr(line, "float")) {
@@ -118,7 +119,7 @@ struct Matrix convertToCSR(char *filename) {
           value = strtok(NULL, " ");
         }
         nnz = buildIntNNZ(nnz_len, dimensions, matrix_vals);
-        ia = buildIntIA(rows, columns, dimensions, matrix_vals);
+        // ia = buildIntIA(rows, columns, dimensions, matrix_vals);
         ja = buildIntJA(rows, columns, nnz_len, matrix_vals);
         vals = matrix_vals;
         non_zeroes = nnz_len;
@@ -134,8 +135,6 @@ struct Matrix convertToCSR(char *filename) {
     matrix.non_zeros = non_zeroes;
     matrix.filename = filename;
 
-    printf("%d\n", matrix.is_float);
-
     fclose(fp);
 
     return matrix;
@@ -144,18 +143,20 @@ struct Matrix convertToCSR(char *filename) {
     free(ja);
     free(ia);
     free(vals);
+    free(line);
   }
 }
 
 char* getResultsString(double *results, int dimensions, bool is_float) {
 
-  char *res = malloc(10000 * sizeof(char));
+  char *res = malloc(10000000 * sizeof(char));
+
+  res[0] = '\0';
 
   for (int i = 0; i < dimensions; i++) {
     char num_char[20];
     num_char[0] = '\0';
     if (is_float == 0) {
-      printf("%f\n", results[i]);
       sprintf(num_char, "%d ", (int) results[i]);
       strcat(res, num_char);
       num_char[0] = '\0';
@@ -163,7 +164,6 @@ char* getResultsString(double *results, int dimensions, bool is_float) {
     }
 
     else {
-      printf("Its a float\n");
       sprintf(num_char, "%f ", results[i]);
       strcat(res, num_char);
       num_char[0] = '\0';
@@ -179,8 +179,6 @@ char* getResultsString(double *results, int dimensions, bool is_float) {
 void printSingleResult (struct Matrix m, char* op_type, char* op_name, int thread_num, double time_taken) {
   time_t t = time(NULL);
   struct tm now = *localtime(&t);
-
-  printf("Is floatz: %d\n", m.is_float);
   
   char *date = malloc(sizeof(char) * 200);
   char *filename = malloc(sizeof(char) * 500);

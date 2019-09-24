@@ -70,7 +70,7 @@ struct Matrix trace (struct Matrix m, int num_threads) {
       trace_sum += m.matrix_vals[i * m.columns + i];
     }
 
-    // printf("%f\n", trace_sum);
+    
 
     clock_t end = clock();
     clock_t elapsed = end - start;
@@ -142,23 +142,23 @@ struct Matrix transpose (struct Matrix m, int num_threads) {
 
   double* new_matrix = malloc(sizeof(double) * matrix_len);
 
-  int counter = 0;
-
-  #pragma omp parallel for private(i,j) shared(transposed.rows, transposed.columns) reductions(+:counter)
+  #pragma omp parallel for private(i,j) shared(transposed.rows, transposed.columns, new_matrix)
   for (int i = 0; i < transposed.columns; i++) {
     for (int j = 0; j < transposed.rows; j++) {
-      new_matrix[counter++] = m.matrix_vals[i + transposed.columns * j];
+      new_matrix[i * transposed.rows + j] = m.matrix_vals[j * transposed.columns + i];
     }
     
   }
 
   transposed.matrix_vals = new_matrix;
+  transposed.is_float = m.is_float;
+  transposed.filename = m.filename;
 
   clock_t end = clock();
   clock_t elapsed = end - start;
   double time_taken = (double) elapsed / CLOCKS_PER_SEC;
 
-  printSingleResult(m, "tr", "tr", num_threads, time_taken);
+  printSingleResult(transposed, "tr", "tr", num_threads, time_taken);
 }
 
 struct Matrix matrixMultiply (struct Matrix a, struct Matrix b, int num_threads) {
@@ -172,14 +172,14 @@ struct Matrix matrixMultiply (struct Matrix a, struct Matrix b, int num_threads)
   int new_dimensions = a.rows * b.columns;
   double *mult_vals = malloc(sizeof(double) * new_dimensions);
 
-  #pragma omp parallel for private(i,j,x) shared(a, b, a.rows, a.columns, b.rows, b.columns, new_matrix.matrix_vals)
+  #pragma omp parallel for private(i,j,x) shared(a, b, a.rows, a.columns, b.rows, b.columns, new_matrix.matrix_vals, mult_vals, total)
   for (int i = 0; i < a.rows; i++) {
     for (int j = 0; j < b.columns; j++) {
       double total = 0.0;
-      for (int x = 0; x < b.rows; x++) {
-        total = total + a.matrix_vals[i + x * a.columns] * b.matrix_vals[j + x * b.columns];
+      for (int x = 0; x < a.columns; x++) {
+        total = total + a.matrix_vals[i * a.columns + x] * b.matrix_vals[x * b.columns + j];
       }
-      mult_vals[i + j * b.columns] = total;
+      mult_vals[i * b.columns + j] = total;
     }
   }
 
