@@ -193,11 +193,11 @@ void printSingleResult (struct Matrix m, char* op_type, char* op_name, int threa
   char* results = getResultsString(m.matrix_vals, dimensions, m.is_float);
 
   if (m.is_float == 0) {
-    fprintf(outfile, "%s\n%s\n%d\n%s\n%d\n%d\n%s\n%f", op_type, m.filename, thread_num, "int", m.rows, m.columns, results, time_taken);
+    fprintf(outfile, "%s\n%s\n%d\n%s\n%d\n%d\n%s\n%f\n", op_type, m.filename, thread_num, "int", m.rows, m.columns, results, time_taken);
   }
 
   else {
-    fprintf(outfile, "%s\n%s\n%d\n%s\n%d\n%d\n%s\n%f", op_type, m.filename, thread_num, "float", m.rows, m.columns, results, time_taken);
+    fprintf(outfile, "%s\n%s\n%d\n%s\n%d\n%d\n%s\n%f\n", op_type, m.filename, thread_num, "float", m.rows, m.columns, results, time_taken);
   }
 
   fclose(outfile);
@@ -224,11 +224,11 @@ void printDoubleResult (struct Matrix a, struct Matrix b, struct Matrix result, 
   char *results = getResultsString(result.matrix_vals, dimensions, result.is_float);
 
   if (result.is_float == 0) {
-    fprintf(outfile, "%s\n%s\n%s\n%d\n%s\n%d\n%d\n%s\n%f", op_type, a.filename, b.filename, thread_num, "int", result.rows, result.columns, results, seconds);
+    fprintf(outfile, "%s\n%s\n%s\n%d\n%s\n%d\n%d\n%s\n%f\n", op_type, a.filename, b.filename, thread_num, "int", result.rows, result.columns, results, seconds);
   }
 
   else {
-    fprintf(outfile, "%s\n%s\n%s\n%d\n%s\n%d\n%d\n%s\n%f", op_type, a.filename, b.filename, thread_num, "float", result.rows, result.columns, results, seconds);
+    fprintf(outfile, "%s\n%s\n%s\n%d\n%s\n%d\n%d\n%s\n%f\n", op_type, a.filename, b.filename, thread_num, "float", result.rows, result.columns, results, seconds);
   }
 
   fclose(outfile);
@@ -254,11 +254,11 @@ void printTraceResult(struct Matrix m, double result, char* op_type, int num_thr
 
   if (m.is_float == 0) {
     int int_result = (int) result;
-    fprintf(outfile, "%s\n%s\n%d\n%s\n%d\n%d\n%d\n%f", op_type, m.filename, num_threads, "int", m.rows, m.columns, int_result, time_taken);
+    fprintf(outfile, "%s\n%s\n%d\n%s\n%d\n%d\n%d\n%f\n", op_type, m.filename, num_threads, "int", m.rows, m.columns, int_result, time_taken);
   }
 
   else {
-    fprintf(outfile, "%s\n%s\n%d\n%s\n%d\n%d\n%f\n%f", op_type, m.filename, num_threads, "float", m.rows, m.columns, result, time_taken);
+    fprintf(outfile, "%s\n%s\n%d\n%s\n%d\n%d\n%f\n%f\n", op_type, m.filename, num_threads, "float", m.rows, m.columns, result, time_taken);
   }
 
   fclose(outfile);

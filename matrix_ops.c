@@ -1,6 +1,5 @@
 #include "header.h"
 
-// Takes an int matrix and multiplies a scalar with it
 struct Matrix scalarMultiply (struct Matrix m, double scalar, int thread_num) {
   omp_set_dynamic(0);
   omp_set_num_threads(thread_num);
@@ -165,7 +164,7 @@ struct Matrix transpose (struct Matrix m, int num_threads) {
   clock_t elapsed = end - start;
   double time_taken = (double) elapsed / CLOCKS_PER_SEC;
 
-  printSingleResult(transposed, "tr", "tr", num_threads, time_taken);
+  printSingleResult(transposed, "ts", "ts", num_threads, time_taken);
 
   return transposed;
 }
@@ -181,7 +180,7 @@ struct Matrix matrixMultiply (struct Matrix a, struct Matrix b, int num_threads)
   int new_dimensions = a.rows * b.columns;
   double *mult_vals = malloc(sizeof(double) * new_dimensions);
 
-  #pragma omp parallel for private(i,j,x) shared(a, b, a.rows, a.columns, b.rows, b.columns, new_matrix.matrix_vals, mult_vals, total)
+  #pragma omp parallel for private(i,j,x) shared(a, b, a.rows, a.columns, b.rows, b.columns, new_matrix.matrix_vals, mult_vals) reduction(+:total)
   for (int i = 0; i < a.rows; i++) {
     for (int j = 0; j < b.columns; j++) {
       double total = 0.0;
